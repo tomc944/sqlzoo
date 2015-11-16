@@ -104,6 +104,12 @@ def eponymous_albums
   # An 'eponymous album' has a `title` that is the same as its recording
   # artist's name. Select the titles of all the eponymous albums.
   execute(<<-SQL)
+    SELECT
+      title
+    FROM
+      albums
+    WHERE
+      artist = title
   SQL
 end
 
@@ -111,6 +117,17 @@ def song_title_counts
   # Select the song names that appear on more than two albums. Also select the
   # COUNT of times they show up.
   execute(<<-SQL)
+    SELECT
+      tracks.song,
+      COUNT(albums.*)
+    FROM
+      tracks
+    JOIN
+      albums ON tracks.album = albums.asin
+    GROUP BY
+      tracks.song
+    HAVING
+      COUNT(albums.*) > 2
   SQL
 end
 
@@ -119,6 +136,16 @@ def best_value
   # pence. Find the good value albums - show the title, the price and the number
   # of tracks.
   execute(<<-SQL)
+    SELECT
+      albums.title, albums.price, COUNT(tracks.*)
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    GROUP BY
+      albums.asin
+    HAVING
+      (albums.price / COUNT(tracks.*)) < 0.5
   SQL
 end
 
@@ -127,12 +154,40 @@ def top_track_counts
   # tracks. List the top 10 albums. Select both the album title and the track
   # count, and order by both track count and title (descending).
   execute(<<-SQL)
+    SELECT
+      albums.title, COUNT(tracks.*)
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    GROUP BY
+      albums.title
+    ORDER BY
+      COUNT(tracks.*) DESC, albums.title DESC
+    LIMIT
+      10
   SQL
 end
 
 def rock_superstars
   # Select the artist who has recorded the most rock albums, as well as the
   # number of albums. HINT: use LIKE '%Rock%' in your query.
+  execute(<<-SQL)
+    SELECT
+      artist, COUNT(DISTINCT albums.*)
+    FROM
+      albums
+    JOIN
+      styles ON styles.album = albums.asin
+    WHERE
+      style LIKE '%Rock%'
+    GROUP BY
+      artist
+    ORDER BY
+      COUNT(DISTINCT albums.*) DESC
+    LIMIT
+      1
+  SQL
 end
 
 def expensive_tastes
